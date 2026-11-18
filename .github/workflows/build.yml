@@ -26,7 +26,7 @@ jobs:
 
           struct ContentView: View {
               var body: some View {
-                  // จุดที่ 1: เปลี่ยนลิงก์เว็บไซต์ของคุณตรงนี้ (ต้องมี https://)
+                  // จุดที่ 1: เปลี่ยนลิงก์เว็บไซต์ของคุณตรงนี้
                   WebView(url: URL(string: "https://ram-ai-1-anzt.vercel.app/")!)
                       .edgesIgnoringSafeArea(.all)
               }
@@ -63,11 +63,12 @@ jobs:
                   CODE_SIGN_IDENTITY: ""
                   CODE_SIGNING_REQUIRED: NO
                   CODE_SIGNING_ALLOWED: NO
+                  VALIDATE_PRODUCT: NO
           EOF
 
           brew install xcodegen
           xcodegen generate
-          xcodebuild -project Rubuddy.xcodeproj -scheme Rubuddy -configuration Release -sdk iphoneos -archivePath build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+          xcodebuild -project Rubuddy.xcodeproj -scheme Rubuddy -configuration Release -sdk iphoneos -archivePath build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO VALIDATE_PRODUCT=NO
           mkdir -p Payload
           cp -r build/App.xcarchive/Products/Applications/*.app Payload/
           zip -r ../Rubuddy.ipa Payload/
