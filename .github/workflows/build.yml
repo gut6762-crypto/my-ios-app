@@ -6,10 +6,11 @@ jobs:
   build:
     runs-on: macos-latest
     steps:
-      - name: Create Swift WebView App
+      - name: Build Swift WebView IPA
         run: |
           mkdir -p MyApp
           cd MyApp
+
           cat << 'EOF' > ContentView.swift
           import SwiftUI
           import WebKit
@@ -51,26 +52,28 @@ jobs:
               type: application
               platform: iOS
               deploymentTarget: "15.0"
-              sources: [ContentView.swift]
+              sources:
+                - ContentView.swift
               settings:
                 base:
                   PRODUCT_BUNDLE_IDENTIFIER: com.tan.rubuddy
                   # จุดที่ 2: เปลี่ยนชื่อแอปที่จะโชว์บนหน้าจอ iPhone ตรงนี้
                   INFOPLIST_KEY_CFBundleDisplayName: "Rubuddy"
+                  MARKETING_VERSION: "1.0.0"
+                  CURRENT_PROJECT_VERSION: "1"
                   INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
                   INFOPLIST_KEY_UILaunchScreen_Generation: YES
                   INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
                   CODE_SIGN_IDENTITY: ""
                   CODE_SIGNING_REQUIRED: NO
                   CODE_SIGNING_ALLOWED: NO
-                  VALIDATE_PRODUCT: NO
           EOF
 
           brew install xcodegen
           xcodegen generate
-          xcodebuild -project Rubuddy.xcodeproj -scheme Rubuddy -configuration Release -sdk iphoneos -archivePath build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO VALIDATE_PRODUCT=NO
+          xcodebuild -project Rubuddy.xcodeproj -scheme Rubuddy -configuration Release -sdk iphoneos -derivedDataPath build clean build CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
           mkdir -p Payload
-          cp -r build/App.xcarchive/Products/Applications/*.app Payload/
+          cp -r build/Build/Products/Release-iphoneos/Rubuddy.app Payload/
           zip -r ../Rubuddy.ipa Payload/
 
       - name: Upload IPA
