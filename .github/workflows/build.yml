@@ -1,0 +1,79 @@
+name: Build iOS IPA
+on:
+  workflow_dispatch:
+
+jobs:
+  build:
+    runs-on: macos-latest
+    steps:
+      - name: Create Swift WebView App
+        run: |
+          mkdir -p MyApp
+          cd MyApp
+          cat << 'EOF' > ContentView.swift
+          import SwiftUI
+          import WebKit
+
+          struct WebView: UIViewRepresentable {
+              let url: URL
+              func makeUIView(context: Context) -> WKWebView {
+                  let webView = WKWebView()
+                  webView.load(URLRequest(url: url))
+                  return webView
+              }
+              func updateUIView(_ uiView: WKWebView, context: Context) {}
+          }
+
+          struct ContentView: View {
+              var body: some View {
+                  // จุดที่ 1: เปลี่ยนลิงก์เว็บไซต์ของคุณตรงนี้ (ต้องมี https://)
+                  WebView(url: URL(string: "https://ram-ai-1-anzt.vercel.app/")!)
+                      .edgesIgnoringSafeArea(.all)
+              }
+          }
+
+          @main
+          struct MyAppApp: App {
+              var body: some Scene {
+                  WindowGroup {
+                      ContentView()
+                  }
+              }
+          }
+          EOF
+
+          cat << 'EOF' > project.yml
+          name: Rubuddy
+          options:
+            bundleIdPrefix: com.tan
+          targets:
+            Rubuddy:
+              type: application
+              platform: iOS
+              deploymentTarget: "15.0"
+              sources: [ContentView.swift]
+              settings:
+                base:
+                  PRODUCT_BUNDLE_IDENTIFIER: com.tan.rubuddy
+                  # จุดที่ 2: เปลี่ยนชื่อแอปที่จะโชว์บนหน้าจอ iPhone ตรงนี้
+                  INFOPLIST_KEY_CFBundleDisplayName: "Rubuddy"
+                  INFOPLIST_KEY_UIApplicationSceneManifest_Generation: YES
+                  INFOPLIST_KEY_UILaunchScreen_Generation: YES
+                  INFOPLIST_KEY_UISupportedInterfaceOrientations_iPhone: UIInterfaceOrientationPortrait
+                  CODE_SIGN_IDENTITY: ""
+                  CODE_SIGNING_REQUIRED: NO
+                  CODE_SIGNING_ALLOWED: NO
+          EOF
+
+          brew install xcodegen
+          xcodegen generate
+          xcodebuild -project Rubuddy.xcodeproj -scheme Rubuddy -configuration Release -sdk iphoneos -archivePath build/App.xcarchive archive CODE_SIGN_IDENTITY="" CODE_SIGNING_REQUIRED=NO CODE_SIGNING_ALLOWED=NO
+          mkdir -p Payload
+          cp -r build/App.xcarchive/Products/Applications/*.app Payload/
+          zip -r ../Rubuddy.ipa Payload/
+
+      - name: Upload IPA
+        uses: actions/upload-artifact@v4
+        with:
+          name: Rubuddy-IPA
+          path: Rubuddy.ipa
